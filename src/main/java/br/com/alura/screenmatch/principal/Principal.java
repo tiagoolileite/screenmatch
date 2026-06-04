@@ -4,6 +4,8 @@ import br.com.alura.screenmatch.model.*;
 import br.com.alura.screenmatch.repository.SerieRepository;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverteDados;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -12,13 +14,19 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
+@Component
 public class Principal {
 
     private Scanner leitura = new Scanner(System.in);
     private ConsumoApi consumo = new ConsumoApi();
     private ConverteDados conversor = new ConverteDados();
-    private final String ENDERECO = "https://www.omdbapi.com/?t=";
-    private final String API_KEY = "&apikey=6585022c";
+
+    @Value("${api.omdb.url}")
+    private String omdbUrl;
+
+    @Value("${api.omdb.key}")
+    private String omdbKey;
+
     private List<DadosSerie> dadosSeries = new ArrayList<>();
 
     private SerieRepository repositorio;
@@ -93,7 +101,8 @@ public class Principal {
     private DadosSerie getDadosSerie() {
         System.out.println("Digite o nome da série para busca");
         var nomeSerie = leitura.nextLine();
-        var json = consumo.obterDados(ENDERECO + nomeSerie.replace(" ", "+") + API_KEY);
+        var endereco = omdbUrl + nomeSerie.replace(" ", "+") + omdbKey;
+        var json = consumo.obterDados(endereco);
         DadosSerie dados = conversor.obterDados(json, DadosSerie.class);
         return dados;
     }
@@ -111,7 +120,7 @@ public class Principal {
             List<DadosTemporada> temporadas = new ArrayList<>();
 
             for (int i = 1; i <= serieEncontrada.getTotalTemporadas(); i++) {
-                var json = consumo.obterDados(ENDERECO + serieEncontrada.getTitulo().replace(" ", "+") + "&season=" + i + API_KEY);
+                var json = consumo.obterDados(omdbUrl + serieEncontrada.getTitulo().replace(" ", "+") + "&season=" + i + omdbKey);
                 DadosTemporada dadosTemporada = conversor.obterDados(json, DadosTemporada.class);
                 temporadas.add(dadosTemporada);
             }
