@@ -12,14 +12,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 
 @Component
 public class Principal {
 
-    private Scanner leitura = new Scanner(System.in);
-    private ConsumoApi consumo = new ConsumoApi();
-    private ConverteDados conversor = new ConverteDados();
+    private final Scanner leitura = new Scanner(System.in);
+    private final ConsumoApi consumo = new ConsumoApi();
+    private final ConverteDados conversor = new ConverteDados();
 
     @Value("${api.omdb.url}")
     private String omdbUrl;
@@ -27,10 +26,7 @@ public class Principal {
     @Value("${api.omdb.key}")
     private String omdbKey;
 
-    private List<DadosSerie> dadosSeries = new ArrayList<>();
-
-    private SerieRepository repositorio;
-    private List<Serie> series = new ArrayList<>();
+    private final SerieRepository repositorio;
 
     public Principal(SerieRepository repositorio) {
         this.repositorio = repositorio;
@@ -47,9 +43,9 @@ public class Principal {
                     5 - Buscar séries por ator
                     6 - Top 5 Séries
                     7 - Buscar séries por categoria
-                    8 - Filtrar séries 
-                                    
-                    0 - Sair                                 
+                    8 - Filtrar séries
+                    
+                    0 - Sair
                     """;
 
             System.out.println(menu);
@@ -93,7 +89,6 @@ public class Principal {
     private void buscarSerieWeb() {
         DadosSerie dados = getDadosSerie();
         Serie serie = new Serie(dados);
-        //dadosSeries.add(dados);
         repositorio.save(serie);
         System.out.println(dados);
     }
@@ -103,8 +98,7 @@ public class Principal {
         var nomeSerie = leitura.nextLine();
         var endereco = omdbUrl + nomeSerie.replace(" ", "+") + omdbKey;
         var json = consumo.obterDados(endereco);
-        DadosSerie dados = conversor.obterDados(json, DadosSerie.class);
-        return dados;
+        return conversor.obterDados(json, DadosSerie.class);
     }
 
     private void buscarEpisodioPorSerie(){
@@ -129,7 +123,7 @@ public class Principal {
             List<Episodio> episodios = temporadas.stream()
                     .flatMap(d -> d.episodios().stream()
                             .map(e -> new Episodio(d.numero(), e)))
-                    .collect(Collectors.toList());
+                    .toList();
 
             serieEncontrada.setEpisodios(episodios);
             repositorio.save(serieEncontrada);
@@ -139,6 +133,7 @@ public class Principal {
     }
 
     private void listarSeriesBuscadas(){
+        List<Serie> series;
         series = repositorio.findAll();
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
